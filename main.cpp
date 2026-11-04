@@ -400,6 +400,7 @@ void replaceFirst(
         text.replace(pos, token.size(), replacement);
 }
 
+
 string renderPage(const string& message) {
     ifstream file("templates/index.html");
 
@@ -408,10 +409,10 @@ string renderPage(const string& message) {
         return "<h1>Server configuration error: HTML template missing</h1>";
     }
 
-    string content(
+    string content{
         istreambuf_iterator<char>(file),
-        istreambuf_iterator<char>()
-    );
+        istreambuf_iterator<char>{}
+    };
 
     string messageHtml;
 
