@@ -491,22 +491,62 @@ void run_server()
         if (client_socket == -1) continue;
 #endif
 
-        char buffer[4096] = { 0 };
-        int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-        if (bytes_received <= 0)
+        string request_data;
+        char buffer[4096];
+        int content_length = -1;
+        size_t header_end = string::npos;
+
+        // Keep reading until complete HTTP request (headers + full body) is loaded
+        while (true)
+        {
+            int bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+            if (bytes <= 0) break;
+            
+            request_data.append(buffer, bytes);
+
+            if (header_end == string::npos)
+            {
+                header_end = request_data.find("\r\n\r\n");
+                if (header_end != string::npos)
+                {
+                    // Find Content-Length header if present
+                    string lower = request_data;
+                    transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+                    size_t cl_pos = lower.find("content-length:");
+                    if (cl_pos != string::npos && cl_pos < header_end)
+                    {
+                        size_t end_line = lower.find("\r\n", cl_pos);
+                        content_length = stoi(lower.substr(cl_pos + 15, end_line - (cl_pos + 15)));
+                    }
+                    else
+                    {
+                        content_length = 0; // GET, HEAD, or bodyless request
+                    }
+                }
+            }
+
+            if (header_end != string::npos)
+            {
+                size_t body_received = request_data.size() - (header_end + 4);
+                if (content_length >= 0 && body_received >= static_cast<size_t>(content_length))
+                {
+                    break;
+                }
+            }
+        }
+
+        if (request_data.empty())
         {
             closeSocket(client_socket);
             continue;
         }
 
-        string request_data(buffer, bytes_received);
         string method = parse_request(request_data).first;
-
         string post_data;
-        if (method == "POST")
+
+        if (method == "POST" && header_end != string::npos)
         {
-            size_t pos = request_data.find("\r\n\r\n");
-            if (pos != string::npos) post_data = request_data.substr(pos + 4);
+            post_data = request_data.substr(header_end + 4);
         }
 
         handle_request(client_socket, method, post_data);
