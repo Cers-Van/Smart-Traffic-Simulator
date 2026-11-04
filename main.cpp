@@ -89,7 +89,7 @@ struct Road
         html << "<ul>";
         for (const Vehicle& v : waitingQueue)
             html << "<li>" << htmlEscape(v.registrationNumber)
-            << " (" << htmlEscape(v.vehicleType) << ")</li>";
+                 << " (" << htmlEscape(v.vehicleType) << ")</li>";
         html << "</ul>";
         return html.str();
     }
@@ -155,13 +155,13 @@ struct Intersection
         for (const Road& r : roads)
         {
             html << "<li>To ID: " << r.destinationIntersectionId
-                << " via " << htmlEscape(r.roadName)
-                << (r.isBlocked
-                    ? " <strong style='color:red;'>[BLOCKED]</strong>"
-                    : " <strong style='color:green;'>[OPEN]</strong>")
-                << "<br><small>Waiting (" << r.waitingQueue.size() << "):</small>"
-                << r.queueHtml()
-                << "</li>";
+                 << " via " << htmlEscape(r.roadName)
+                 << (r.isBlocked
+                     ? " <strong style='color:red;'>[BLOCKED]</strong>"
+                     : " <strong style='color:green;'>[OPEN]</strong>")
+                 << "<br><small>Waiting (" << r.waitingQueue.size() << "):</small>"
+                 << r.queueHtml()
+                 << "</li>";
         }
         html << "</ul>";
         return html.str();
@@ -196,12 +196,12 @@ public:
         if (a->hasRoadTo(secondId)) return "A road already exists between these intersections.";
         if (a->hasRoadNamed(roadName) || b->hasRoadNamed(roadName))
             return "Road name '" + htmlEscape(roadName) + "' is already used at one of these intersections. "
-            "Road names must be unique per intersection.";
+                   "Road names must be unique per intersection.";
 
-        a->roads.push_front(Road{ secondId, roadName, false,{} });
-        b->roads.push_front(Road{ firstId, roadName, false,{} });
+        a->roads.push_front(Road{ secondId, roadName, false, {} });
+        b->roads.push_front(Road{ firstId, roadName, false, {} });
         return "Road '" + htmlEscape(roadName) + "' connected between Intersection " +
-            to_string(firstId) + " and " + to_string(secondId) + ".";
+               to_string(firstId) + " and " + to_string(secondId) + ".";
     }
 
     string addVehicleToRoad(int id, const string& roadName, const string& vehicleNumber, const string& vehicleType)
@@ -213,8 +213,8 @@ public:
 
         if (road->enqueueVehicle({ vehicleNumber, vehicleType }))
             return "Vehicle " + htmlEscape(vehicleNumber) + " (" + htmlEscape(vehicleType) +
-            ") queued at " + htmlEscape(node->intersectionName) + " for road '" +
-            htmlEscape(road->roadName) + "'.";
+                   ") queued at " + htmlEscape(node->intersectionName) + " for road '" +
+                   htmlEscape(road->roadName) + "'.";
         return "Queue is full on road '" + htmlEscape(road->roadName) + "'.";
     }
 
@@ -230,11 +230,11 @@ public:
 
         size_t passed = min(static_cast<size_t>(count), road->waitingQueue.size());
         road->waitingQueue.erase(road->waitingQueue.begin(),
-            road->waitingQueue.begin() + passed);
+                                 road->waitingQueue.begin() + passed);
 
         return "Signal GREEN at " + htmlEscape(node->intersectionName) + " for road '" +
-            htmlEscape(road->roadName) + "'. " + to_string(passed) +
-            " vehicle(s) passed. Remaining: " + to_string(road->waitingQueue.size()) + ".";
+               htmlEscape(road->roadName) + "'. " + to_string(passed) +
+               " vehicle(s) passed. Remaining: " + to_string(road->waitingQueue.size()) + ".";
     }
 
     string changeRoadBlockStatus(int firstId, int secondId, bool blocked)
@@ -248,7 +248,7 @@ public:
         if (!(fwd && rev)) return "Road does not exist between these two intersections.";
 
         return "Road between " + to_string(firstId) + " and " + to_string(secondId) +
-            (blocked ? " is now BLOCKED." : " is now REOPENED.");
+               (blocked ? " is now BLOCKED." : " is now REOPENED.");
     }
 
     string getNetworkHtml() const
@@ -260,12 +260,12 @@ public:
         for (const auto& [id, node] : intersections)
         {
             html << "<div style='background:#f4f4f4; padding:12px; margin-bottom:12px; "
-                "border-radius:6px; border:1px solid #ccc;'>"
-                << "<h3>Intersection [" << id << "] " << htmlEscape(node.intersectionName) << "</h3>"
-                << "<p><strong>Total waiting vehicles: " << node.totalWaiting() << "</strong></p>"
-                << "<p><strong>Roads &amp; their queues:</strong></p>"
-                << node.roadsHtml()
-                << "</div>";
+                    "border-radius:6px; border:1px solid #ccc;'>"
+                 << "<h3>Intersection [" << id << "] " << htmlEscape(node.intersectionName) << "</h3>"
+                 << "<p><strong>Total waiting vehicles: " << node.totalWaiting() << "</strong></p>"
+                 << "<p><strong>Roads &amp; their queues:</strong></p>"
+                 << node.roadsHtml()
+                 << "</div>";
         }
         return html.str();
     }
@@ -333,8 +333,8 @@ string renderPage(const string& message)
     string messageHtml;
     if (!message.empty())
         messageHtml = "<div style='padding:10px; background:#e0f2fe; border:1px solid #0284c7; "
-        "color:#0369a1; border-radius:4px; margin-bottom:15px; font-weight:bold;'>" +
-        message + "</div>";
+                      "color:#0369a1; border-radius:4px; margin-bottom:15px; font-weight:bold;'>" +
+                      message + "</div>";
 
     replaceFirst(content, "{{MESSAGE}}", messageHtml);
     replaceFirst(content, "{{NETWORK}}", simulator.getNetworkHtml());
@@ -344,10 +344,10 @@ string renderPage(const string& message)
 string processAction(const map<string, string>& form)
 {
     auto get = [&](const string& key) -> string
-        {
-            auto it = form.find(key);
-            return it == form.end() ? "" : it->second;
-        };
+    {
+        auto it = form.find(key);
+        return it == form.end() ? "" : it->second;
+    };
 
     const string action = get("action");
 
@@ -401,7 +401,7 @@ void handle_request(socket_t client_socket, const string& method, const string& 
 
     string pageHtml = renderPage(statusMessage);
     string response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nContent-Length: " +
-        to_string(pageHtml.size()) + "\r\n\r\n" + pageHtml;
+                      to_string(pageHtml.size()) + "\r\n\r\n" + pageHtml;
 
     send(client_socket, response.c_str(), static_cast<int>(response.size()), 0);
     closeSocket(client_socket);
@@ -464,7 +464,7 @@ void run_server()
     server_address.sin_port = htons(port);
 
     if (bind(server_socket, (sockaddr*)&server_address, sizeof(server_address)) < 0 ||
-        listen(server_socket, 5) < 0)
+        listen(server_socket, 10) < 0)
     {
         cerr << "Failed to bind/listen on port " << port << endl;
         closeSocket(server_socket);
@@ -496,12 +496,11 @@ void run_server()
         int content_length = -1;
         size_t header_end = string::npos;
 
-        // Keep reading until complete HTTP request (headers + full body) is loaded
         while (true)
         {
             int bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
             if (bytes <= 0) break;
-            
+
             request_data.append(buffer, bytes);
 
             if (header_end == string::npos)
@@ -509,7 +508,6 @@ void run_server()
                 header_end = request_data.find("\r\n\r\n");
                 if (header_end != string::npos)
                 {
-                    // Find Content-Length header if present
                     string lower = request_data;
                     transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
                     size_t cl_pos = lower.find("content-length:");
@@ -520,7 +518,7 @@ void run_server()
                     }
                     else
                     {
-                        content_length = 0; // GET, HEAD, or bodyless request
+                        content_length = 0;
                     }
                 }
             }
