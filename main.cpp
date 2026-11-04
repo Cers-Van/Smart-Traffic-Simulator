@@ -18,6 +18,7 @@
 using socket_t = SOCKET;
 #else
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -491,6 +492,17 @@ void run_server()
         if (client_socket == -1) continue;
 #endif
 
+        // Set 3-second receive timeout so hanging browser pings do not lock server
+#ifdef _WIN32
+        DWORD timeout = 3000;
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+#else
+        struct timeval tv;
+        tv.tv_sec = 3;
+        tv.tv_usec = 0;
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+#endif
+
         string request_data;
         char buffer[4096];
         int content_length = -1;
@@ -525,10 +537,18 @@ void run_server()
 
             if (header_end != string::npos)
             {
-                size_t body_received = request_data.size() - (header_end + 4);
-                if (content_length >= 0 && body_received >= static_cast<size_t>(content_length))
+                // If it is a GET or has 0 content length, break immediately
+                if (content_length == 0)
                 {
                     break;
+                }
+                if (content_length > 0)
+                {
+                    size_t body_received = request_data.size() - (header_end + 4);
+                    if (body_received >= static_cast<size_t>(content_length))
+                    {
+                        break;
+                    }
                 }
             }
         }
