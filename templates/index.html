@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Traffic Signal Simulator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 14px 20px; background: #eef2f5; color: #333; font-size: 13px; }
+        h1 { color: #1e293b; font-size: 22px; margin: 0 0 10px 0; }
+        h2 { font-size: 15px; margin: 0 0 10px 0; color: #0f172a; }
+        h3 { margin: 0 0 6px 0; font-size: 13px; color: #0f172a; }
+
+        .container { display: grid; grid-template-columns: 600px 1fr; gap: 16px; align-items: start; }
+        .panel, .display-panel { background: #fff; padding: 14px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-box { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; }
+
+        .display-panel { max-height: calc(100vh - 80px); overflow-y: auto; position: sticky; top: 14px; }
+        .network { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+        .network > div { margin: 0 !important; padding: 10px !important; font-size: 12px; }
+        .network h3 { margin: 0 0 4px 0; }
+        .network p { margin: 4px 0; }
+        .network ul { margin: 2px 0; padding-left: 18px; }
+
+        label { display: block; margin: 5px 0 2px 0; font-size: 12px; font-weight: bold; }
+        .row { display: flex; gap: 6px; }
+        .row > div { flex: 1; min-width: 0; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 5px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
+        input[type="submit"], button { margin-top: 8px; padding: 6px 12px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        input[type="submit"]:hover { background: #1d4ed8; }
+        .btn-green { background: #16a34a !important; }
+        .btn-green:hover { background: #15803d !important; }
+        .btn-danger { background: #dc2626 !important; }
+        .btn-danger:hover { background: #b91c1c !important; }
+        .btn-warning { background: #d97706 !important; }
+        .btn-warning:hover { background: #b45309 !important; }
+
+        @media (max-width: 1000px) {
+            .container { grid-template-columns: 1fr; }
+            .display-panel { position: static; max-height: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Smart Traffic Signal Simulator</h1>
+
+    {{MESSAGE}}
+
+    <div class="container">
+        <div class="panel">
+            <h2>Operations Panel</h2>
+            <div class="ops-grid">
+
+                <div class="form-box">
+                    <h3>1. Add Intersection</h3>
+                    <form method="POST" action="/">
+                        <input type="hidden" name="action" value="add_intersection">
+                        <label>Intersection ID:</label>
+                        <input type="number" name="id" required>
+                        <label>Intersection Name:</label>
+                        <input type="text" name="name" required>
+                        <input type="submit" value="Add Intersection">
+                    </form>
+                </div>
+
+                <div class="form-box">
+                    <h3>2. Connect Road</h3>
+                    <form method="POST" action="/">
+                        <input type="hidden" name="action" value="connect_road">
+                        <div class="row">
+                            <div><label>First ID:</label><input type="number" name="src" required></div>
+                            <div><label>Second ID:</label><input type="number" name="dest" required></div>
+                        </div>
+                        <label>Road Name:</label>
+                        <input type="text" name="name" required>
+                        <input type="submit" value="Connect Road">
+                    </form>
+                </div>
+
+                <div class="form-box">
+                    <h3>3. Add Vehicle to Road Queue</h3>
+                    <form method="POST" action="/">
+                        <input type="hidden" name="action" value="add_vehicle">
+                        <div class="row">
+                            <div><label>At Intersection ID:</label><input type="number" name="id" required></div>
+                            <div><label>Road Name:</label><input type="text" name="road" required></div>
+                        </div>
+                        <div class="row">
+                            <div><label>Reg Number:</label><input type="text" name="reg" required></div>
+                            <div><label>Type:</label><input type="text" name="type" placeholder="Car / Bus" required></div>
+                        </div>
+                        <input type="submit" value="Add Vehicle">
+                    </form>
+                </div>
+
+                <div class="form-box">
+                    <h3>4. Signal Green (Pass Vehicles)</h3>
+                    <form method="POST" action="/">
+                        <input type="hidden" name="action" value="green_signal">
+                        <div class="row">
+                            <div><label>At Intersection ID:</label><input type="number" name="id" required></div>
+                            <div><label>Road Name:</label><input type="text" name="road" required></div>
+                        </div>
+                        <label>Vehicles to Pass:</label>
+                        <input type="number" name="count" value="1" min="1" required>
+                        <input type="submit" class="btn-green" value="Turn Green">
+                    </form>
+                </div>
+
+                <div class="form-box" style="grid-column: 1 / -1;">
+                    <h3>5. Block / Reopen Road</h3>
+                    <form method="POST" action="/">
+                        <div class="row">
+                            <div><label>Intersection A ID:</label><input type="number" name="src" required></div>
+                            <div><label>Intersection B ID:</label><input type="number" name="dest" required></div>
+                        </div>
+                        <button type="submit" name="action" value="block_road" class="btn-danger">Block Road</button>
+                        <button type="submit" name="action" value="reopen_road" class="btn-warning">Reopen Road</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="display-panel">
+            <h2>Current Road Network &amp; Traffic State</h2>
+            <div class="network">
+                {{NETWORK}}
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
